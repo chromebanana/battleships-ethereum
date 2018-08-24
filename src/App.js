@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+import Battleships from '../build/contracts/SimpleStorage.json'
 import getWeb3 from './utils/getWeb3'
 
 import './css/oswald.css'
@@ -15,8 +15,10 @@ class App extends Component {
       storageValue: 0,
       web3: null,
       contract: null,
-      account: null
+      account: null,
+      availableGames: null
     }
+
   }
 
   componentWillMount() {
@@ -46,8 +48,10 @@ class App extends Component {
      */
 
     const contract = require('truffle-contract')
-    const simpleStorage = contract(SimpleStorageContract)
+    const simpleStorage = contract(Battleships)
     simpleStorage.setProvider(this.state.web3.currentProvider)
+
+    this.state.event = simpleStorage.GameInitialized();
 
     // Declaring this for later so we can chain functions on SimpleStorage.
     var simpleStorageInstance
@@ -69,22 +73,39 @@ class App extends Component {
     })
   }
 
-  handleClick(event){
+  createGame(event){
     const contract = this.state.contract
     const account = this.state.account
 
-    var value = 3
+    var value = "Alice"
 
-    contract.set(value, {from: account})
+    contract.initGame(value, {from: account})
     .then(result => {
-      return contract.get.call()
+      return contract.getOpenGameIds.call()
     }).then(result => {
-      return this.setState({storageValue: result.c[0]})
+      return this.setState({storageValue: result})
+      //result.c[0]
     })
   }
 
+  getOpenGames(event){
+    const contract = this.state.contract
+    //const account = this.state.account
+
+    contract.getOpenGameIds.call()
+    .then( result => { this.setState({availableGames: result})})
+  }
+
+
 
   render() {
+
+    this.state.event.watch ((err, event) => {
+      if (err) console.error ('An error occured::::', err);
+      console.log ('This is the event::::', event);
+      console.log ('THis is the experiment result::::', event.args.result);
+    })
+
     return (
       <div className="App">
         <nav className="navbar pure-menu pure-menu-horizontal">
@@ -100,7 +121,9 @@ class App extends Component {
               <p>If your contracts compiled and migrated successfully, below will show a stored value of 5 (by default).</p>
               <p>Try changing the value stored on <strong>line 59</strong> of App.js.</p>
               <p>The stored value is: {this.state.storageValue}</p>
-              <button onClick={this.handleClick.bind(this)}>Set Storage</button>
+              <button onClick={this.createGame.bind(this)}>Create Game</button>
+              <button onClick={this.getOpenGames.bind(this)}>See All Open Games</button>
+              <p> Open Games are: {this.state.openGameIds}</p>
             </div>
           </div>
         </main>
