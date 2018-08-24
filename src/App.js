@@ -16,7 +16,10 @@ class App extends Component {
       web3: null,
       contractInstance: null,
       account: null,
-      availableGames: null
+      availableGames: null,
+      gameInitializedByPlayerAddress: null,
+      gameInitializedByPlayerAlias: null,
+      newGameInitializedAddress: null
     }
 
   }
@@ -32,16 +35,21 @@ class App extends Component {
       });
       const contract = require('truffle-contract')
       const battleships = contract(Battleships)
+
       battleships.setProvider(this.state.web3.currentProvider)
 
-//Get accounts
+      var battleshipsInstance
+
     this.state.web3.eth.getAccounts((error, accounts) => {
       battleships.deployed().then((instance) => {
+        battleshipsInstance = instance;
         this.setState({
           account: accounts[0],
-          contractInstance: instance
+          contractInstance: battleshipsInstance
         });
+
         console.log('account::::', this.state.account)
+        console.log('account::::', this.state.contractInstance)
       });
     });
 
@@ -50,7 +58,7 @@ class App extends Component {
       console.log('Error finding web3.')
     })
 
-//   this.state.event = battleships.GameInitialized();
+//    this.state.event = this.state.contractInstance.GameInitialized();
 
   }
 
@@ -65,7 +73,19 @@ class App extends Component {
     const contract = this.state.contractInstance
     const account = this.state.account
 
+    var gameInitializedEvent = contract.GameInitialized();
+
+    gameInitializedEvent.watch ((err, event) => {
+      if (err) console.error ('An error occured::::', err);
+      console.log ('This is the event::::', event);
+      console.log ('THis is the data::::', event.args);
+      this.setState({gameInitializedByPlayerAddress : event.args.player1})
+      this.setState({gameInitializedByPlayerAlias : event.args.player1Alias})
+    })
+
     var value = "Alice"
+
+
 
     contract.initGame(value, {from: account})
     .then(result => {
@@ -74,6 +94,7 @@ class App extends Component {
       return this.setState({storageValue: result})
       //result.c[0]
     })
+
   }
 
   getOpenGames(event){
@@ -85,14 +106,9 @@ class App extends Component {
   }
 
 
-
   render() {
 
-    // this.state.event.watch ((err, event) => {
-    //   if (err) console.error ('An error occured::::', err);
-    //   console.log ('This is the event::::', event);
-    //   console.log ('THis is the experiment result::::', event.args.result);
-    // })
+
 
     return (
       <div className="App">
@@ -109,7 +125,7 @@ class App extends Component {
               <p>If your contracts compiled and migrated successfully, below will show a stored value of 5 (by default).</p>
               <p>Try changing the value stored on <strong>line 59</strong> of App.js.</p>
               <p>Your account is: {this.state.account}</p>
-              <p>Your game is: {this.state.storageValue}</p>
+              <p>{this.state.gameInitializedBy}, your game is: {this.state.storageValue}</p>
               <button onClick={this.click.bind(this)}>Create Game</button>
               <button onClick={this.getOpenGames.bind(this)}>See All Open Games</button>
               <p> Open Games are: {this.state.openGameIds}</p>
