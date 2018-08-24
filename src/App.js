@@ -51,7 +51,7 @@ class App extends Component {
     const simpleStorage = contract(Battleships)
     simpleStorage.setProvider(this.state.web3.currentProvider)
 
-    this.state.event = simpleStorage.GameInitialized();
+    // this.state.event = simpleStorage.GameInitialized();
 
     // Declaring this for later so we can chain functions on SimpleStorage.
     var simpleStorageInstance
@@ -100,11 +100,11 @@ class App extends Component {
 
   render() {
 
-    this.state.event.watch ((err, event) => {
-      if (err) console.error ('An error occured::::', err);
-      console.log ('This is the event::::', event);
-      console.log ('THis is the experiment result::::', event.args.result);
-    })
+    // this.state.event.watch ((err, event) => {
+    //   if (err) console.error ('An error occured::::', err);
+    //   console.log ('This is the event::::', event);
+    //   console.log ('THis is the experiment result::::', event.args.result);
+    // })
 
     return (
       <div className="App">
