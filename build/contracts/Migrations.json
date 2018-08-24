@@ -1378,10 +1378,10 @@
     "1535120869726": {
       "events": {},
       "links": {},
-      "address": "0x06c24754a011132c98f0ef87bd3c675448d018b1",
-      "transactionHash": "0xc98d3ed7cd5e953f52b4162493e13676d17aad32f87c82baf8d8d28bfbdf6677"
+      "address": "0xbbba2b49a89f2b6403a1c59a2b76552955dd2a36",
+      "transactionHash": "0x2a434a0cc62ec6edd5e913be95f3916657b7994d9a820bf4982dcbb6bf08d59a"
     }
   },
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-24T14:56:39.849Z"
+  "updatedAt": "2018-08-24T19:11:40.716Z"
 }

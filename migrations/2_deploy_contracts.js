@@ -1,5 +1,7 @@
-var SimpleStorage = artifacts.require("./SimpleStorage.sol");
+var Battleships = artifacts.require("./Battleships.sol");
+var TurnBasedGame = artifacts.require("./TurnBasedGame.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(SimpleStorage);
+  deployer.deploy(TurnBasedGame);
+  deployer.deploy(Battleships);
 };

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Battleships from '../build/contracts/SimpleStorage.json'
+import Battleships from '../build/contracts/Battleships.json'
 import getWeb3 from './utils/getWeb3'
 
 import './css/oswald.css'
@@ -14,7 +14,7 @@ class App extends Component {
     this.state = {
       storageValue: 0,
       web3: null,
-      contract: null,
+      contractInstance: null,
       account: null,
       availableGames: null
     }
@@ -49,15 +49,20 @@ class App extends Component {
     .catch(() => {
       console.log('Error finding web3.')
     })
+
+//   this.state.event = battleships.GameInitialized();
+
   }
 
 
-    // this.state.event = battleships.GameInitialized();
 
 
 
-  createGame(event){
-    const contract = this.state.contract
+
+
+
+  click(event){
+    const contract = this.state.contractInstance
     const account = this.state.account
 
     var value = "Alice"
@@ -72,7 +77,7 @@ class App extends Component {
   }
 
   getOpenGames(event){
-    const contract = this.state.contract
+    const contract = this.state.contractInstance
     //const account = this.state.account
 
     contract.getOpenGameIds.call()
@@ -104,7 +109,8 @@ class App extends Component {
               <p>If your contracts compiled and migrated successfully, below will show a stored value of 5 (by default).</p>
               <p>Try changing the value stored on <strong>line 59</strong> of App.js.</p>
               <p>Your account is: {this.state.account}</p>
-              <button onClick={this.createGame.bind(this)}>Create Game</button>
+              <p>Your game is: {this.state.storageValue}</p>
+              <button onClick={this.click.bind(this)}>Create Game</button>
               <button onClick={this.getOpenGames.bind(this)}>See All Open Games</button>
               <p> Open Games are: {this.state.openGameIds}</p>
             </div>
