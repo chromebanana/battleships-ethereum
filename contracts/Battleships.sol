@@ -30,15 +30,6 @@ contract TurnBasedGame {
         uint pot; // What this game is worth: ether paid into the game
         uint player1Winnings;
         uint player2Winnings;
-        uint timeoutStarted; // timer for timeout
-        /*
-         * -2 draw offered by nextPlayer
-         * -1 draw offered by waiting player
-         * 0 nothing
-         * 1 checkmate
-         * 2 timeout
-         */
-        int8 timeoutState;
     }
 
     mapping (bytes32 => Game) public games;
@@ -87,7 +78,6 @@ contract TurnBasedGame {
         bytes32 gameId = keccak256(abi.encodePacked(msg.sender,block.number));
 
         games[gameId].ended = false;
-        games[gameId].timeoutState = 0;
 
         // Initialize participants
         games[gameId].player1 = msg.sender;
@@ -115,6 +105,10 @@ contract TurnBasedGame {
      * string player2Alias: Alias of the player that is joining
      */
     function joinGame(bytes32 gameId, string player2Alias) public payable {
+
+        //check that this game was not intitalized by joiner!
+        require(games[gameId].player1 != msg.sender, "you can't join your own game!");
+
         // Check that this game does not have a second player yet
         require(games[gameId].player2 == 0, "this game is full");
 

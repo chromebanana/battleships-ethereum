@@ -100,7 +100,8 @@ class App extends Component {
       return contract.getOpenGameIds.call()
     })
     .then(result => {
-      this.setState({player1LastInitializedGame: result})
+      var openGameIds = result.toString().split(",");
+      this.setState({player1LastInitializedGame: openGameIds[0]});
       console.log ('game id:::: ', this.state.player1LastInitializedGame)
     })
 
