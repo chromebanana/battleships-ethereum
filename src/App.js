@@ -24,7 +24,11 @@ class App extends Component {
       gameInitializedByPlayerAlias: null,
       newGameInitializedAddress: null,
       openGameIds: null,
-      gameIDToJoin: ""
+      gameIDToJoin: "",
+      opponentAlias: "",
+      opponentAddress: null,
+      gameJoined: null,
+      pot: null
     }
 
   }
@@ -74,7 +78,7 @@ class App extends Component {
 
 
 
-  click(event){
+  createGame(event){
     event.preventDefault()
     const contract = this.state.contractInstance
     const account = this.state.account
@@ -117,13 +121,29 @@ class App extends Component {
 
 joinGame(event){
 event.preventDefault()
+  const contract = this.state.contractInstance
+  const account = this.state.account
+
   var player2Alias = this.state.player2Alias
   var gameID = this.state.gameIDToJoin
-  const contract = this.state.contractInstance
+
+  var gameJoinedEvent = contract.GameJoined();
+
+  gameJoinedEvent.watch ((err, event) => {
+    if (err) console.error ('An error occured::::', err);
+    console.log ('This is the event::::', event);
+    console.log ('THis is the data::::', event.args);
+    this.setState({opponentAlias : event.args.player1Alias})
+    this.setState({opponentAddress : event.args.player1})
+    this.setState({pot : event.args.pot})
+    this.setState({gameJoined : true})
+
+  })
+
 
   console.log (player2Alias, 'you want to join::::', gameID);
 
-  contract.joinGame(gameID, player2Alias)
+  contract.joinGame(gameID, player2Alias, {from: account})
 
 }
 
@@ -146,7 +166,7 @@ event.preventDefault()
               <p>Your account is: {this.state.account}</p>
 <h2>Create a new game</h2>
 <p> Enter the screen name you want other/s to  and click 'Create Game' </p>
-<form onSubmit={this.click.bind(this)}>
+<form onSubmit={this.createGame.bind(this)}>
   <input
     type="text"
     name="choose-game-id"
@@ -177,7 +197,7 @@ event.preventDefault()
                   onChange={ event => this.setState ({ gameIDToJoin: event.target.value }) } />
                   <button type="submit"> Join </button>
                   </form>
-
+<p> you are now playing against {this.state.opponentAlias} from {this.state.opponentAddress}</p>
                     </div>
           </div>
         </main>
