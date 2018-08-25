@@ -19,6 +19,7 @@ class App extends Component {
       availableGames: null,
       player1Alias: "",
       player1LastInitializedGame: null,
+      player2Alias: "",
       gameInitializedByPlayerAddress: null,
       gameInitializedByPlayerAlias: null,
       newGameInitializedAddress: null,
@@ -104,7 +105,7 @@ class App extends Component {
   getOpenGames(event){
     const contract = this.state.contractInstance
     //const account = this.state.account
-
+////NOT WORKIGGGGGG
     contract.getOpenGameIds.call()
     .then( result => { this.setState({openGameIds: result})})
 
@@ -114,14 +115,15 @@ class App extends Component {
 
 
 
-gameIDSubmit(event){
+joinGame(event){
 event.preventDefault()
-  var player2Alias = "PLAYER2"
+  var player2Alias = this.state.player2Alias
+  var gameID = this.state.gameIDToJoin
   const contract = this.state.contractInstance
 
-  console.log ('you want to join::::', this.state.gameIDToJoin);
+  console.log (player2Alias, 'you want to join::::', gameID);
 
-  contract.joinGame(this.state.gameIDToJoin, player2Alias)
+  contract.joinGame(gameID, player2Alias)
 
 }
 
@@ -134,7 +136,7 @@ event.preventDefault()
     return (
       <div className="App">
         <nav className="navbar pure-menu pure-menu-horizontal">
-            <a href="#" className="pure-menu-heading pure-menu-link">Truffle Box</a>
+            <a href="#" className="pure-menu-heading">Built from a Truffle Box by William Cragg</a>
         </nav>
 
         <main className="container">
@@ -160,7 +162,13 @@ event.preventDefault()
                               <h2>Join an existing game</h2>
               <button onClick={this.getOpenGames.bind(this)}>See All Open Games</button>
               <p> Open Games are: {this.state.openGameIds}</p>
-              <form onSubmit={ this.gameIDSubmit.bind(this)}>
+              <form onSubmit={ this.joinGame.bind(this)}>
+              <input
+                type="text"
+                name="choose-game-id"
+                placeholder="Enter a screen name"
+                value={ this.state.player2Alias}
+                onChange={ event => this.setState ({ player2Alias: event.target.value }) } />
                 <input
                   type="text"
                   name="choose-game-id"
