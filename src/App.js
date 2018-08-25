@@ -17,9 +17,13 @@ class App extends Component {
       contractInstance: null,
       account: null,
       availableGames: null,
+      player1Alias: "",
+      player1LastInitializedGame: null,
       gameInitializedByPlayerAddress: null,
       gameInitializedByPlayerAlias: null,
-      newGameInitializedAddress: null
+      newGameInitializedAddress: null,
+      openGameIds: null,
+      gameIDToJoin: ""
     }
 
   }
@@ -70,6 +74,7 @@ class App extends Component {
 
 
   click(event){
+    event.preventDefault()
     const contract = this.state.contractInstance
     const account = this.state.account
 
@@ -83,16 +88,15 @@ class App extends Component {
       this.setState({gameInitializedByPlayerAlias : event.args.player1Alias})
     })
 
-    var value = "Alice"
+    var player1Alias = this.state.player1Alias
 
-
-
-    contract.initGame(value, {from: account})
+    contract.initGame(player1Alias, {from: account})
     .then(result => {
       return contract.getOpenGameIds.call()
-    }).then(result => {
-      return this.setState({storageValue: result})
-      //result.c[0]
+    })
+    .then(result => {
+      this.setState({player1LastInitializedGame: result})
+      console.log ('game id:::: ', this.state.player1LastInitializedGame)
     })
 
   }
@@ -102,8 +106,25 @@ class App extends Component {
     //const account = this.state.account
 
     contract.getOpenGameIds.call()
-    .then( result => { this.setState({availableGames: result})})
+    .then( result => { this.setState({openGameIds: result})})
+
+
+
   }
+
+
+
+gameIDSubmit(event){
+event.preventDefault()
+  var player2Alias = "PLAYER2"
+  const contract = this.state.contractInstance
+
+  console.log ('you want to join::::', this.state.gameIDToJoin);
+
+  contract.joinGame(this.state.gameIDToJoin, player2Alias)
+
+}
+
 
 
   render() {
@@ -119,17 +140,37 @@ class App extends Component {
         <main className="container">
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <h1>Good to Go!</h1>
-              <p>Your Truffle Box is installed and ready.</p>
-              <h2>Smart Contract Example</h2>
-              <p>If your contracts compiled and migrated successfully, below will show a stored value of 5 (by default).</p>
-              <p>Try changing the value stored on <strong>line 59</strong> of App.js.</p>
+              <h1>Battleships + Ethereum</h1>
               <p>Your account is: {this.state.account}</p>
-              <p>{this.state.gameInitializedBy}, your game is: {this.state.storageValue}</p>
-              <button onClick={this.click.bind(this)}>Create Game</button>
+<h2>Create a new game</h2>
+<p> Enter the screen name you want other/s to  and click 'Create Game' </p>
+<form onSubmit={this.click.bind(this)}>
+  <input
+    type="text"
+    name="choose-game-id"
+    placeholder="William Wallace"
+    value={ this.state.player1Alias }
+    onChange={ event => this.setState ({ player1Alias: event.target.value }) } />
+    <button type="submit">Create Game</button>
+    </form>
+
+                            <p>{this.state.player1Alias}, your game is: {this.state.player1LastInitializedGame}</p>
+                      <br />
+                              <br />
+                              <h2>Join an existing game</h2>
               <button onClick={this.getOpenGames.bind(this)}>See All Open Games</button>
               <p> Open Games are: {this.state.openGameIds}</p>
-            </div>
+              <form onSubmit={ this.gameIDSubmit.bind(this)}>
+                <input
+                  type="text"
+                  name="choose-game-id"
+                  placeholder="Enter an open game Id"
+                  value={ this.state.gameIDToJoin }
+                  onChange={ event => this.setState ({ gameIDToJoin: event.target.value }) } />
+                  <button type="submit"> Join </button>
+                  </form>
+
+                    </div>
           </div>
         </main>
       </div>
@@ -138,3 +179,4 @@ class App extends Component {
 }
 
 export default App
+            // <button onClick={this.click.bind(this)}>Create Game</button>
