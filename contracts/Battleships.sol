@@ -111,7 +111,7 @@ contract TurnBasedGame {
         if (player == games[gameId].player1) {
             return games[gameId].player1Hand;
         }
-        if (player == games[gameId].player1) {
+        if (player == games[gameId].player2) {
             return games[gameId].player2Hand;
         }
     }
@@ -200,7 +200,7 @@ contract Battleships is TurnBasedGame {
      */
     function joinGame(bytes32 gameId, string player2Alias, uint playerHand) public payable {
         super.joinGame(gameId, player2Alias);
-        setPlayerHand(gameId, playerHand);
+        super.setPlayerHand(gameId, playerHand);
         // for this game the first to play is the entering challenger (player2)
         games[gameId].nextPlayer = msg.sender;
 
