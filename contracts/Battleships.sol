@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.2;
 
 contract TurnBasedGame {
 
@@ -96,7 +96,7 @@ contract TurnBasedGame {
     }
 
 
-    function setPlayerHand(bytes32 gameId, uint value) {
+    function setPlayerHand(bytes32 gameId, uint value) public {
         if (msg.sender == games[gameId].player1)
             //require(games[gameId].player1Ready == false, "you've already set your hand");
             games[gameId].player1Hand = value;
@@ -107,7 +107,7 @@ contract TurnBasedGame {
            // games[gameId].player2Ready = true;
     }
 
-    function getPlayerHand(bytes32 gameId, address player) returns (uint) {
+    function getPlayerHand(bytes32 gameId, address player) public returns (uint) {
         if (player == games[gameId].player1) {
             return games[gameId].player1Hand;
         }
@@ -144,12 +144,12 @@ contract TurnBasedGame {
         // Remove from openGameIds
         if (head == gameId) {
             head = openGameIds[head];
-            openGameIds[gameId] = 0;
+            openGameIds[gameId] = bytes32(0);
         } else {
             for (bytes32 g = head; g != 'end' && openGameIds[g] != 'end'; g = openGameIds[g]) {
                 if (openGameIds[g] == gameId) {
                     openGameIds[g] = openGameIds[gameId];
-                    openGameIds[gameId] = 0;
+                    openGameIds[gameId] = bytes32(0);
                     break;
                 }
             }
@@ -157,7 +157,7 @@ contract TurnBasedGame {
 
 
     }
-    function takeTurn(bytes32 gameId) {
+    function takeTurn(bytes32 gameId) public {
         require(games[gameId].player1 == msg.sender || games[gameId].player2 == msg.sender, "this isn't your game!");
         require(games[gameId].nextPlayer == msg.sender, "its not your turn!");
 
