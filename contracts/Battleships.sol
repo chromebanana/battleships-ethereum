@@ -24,7 +24,7 @@ contract TurnBasedGame {
         address player2;
         string player1Alias;
         string player2Alias;
-        address nextPlayer;
+        address nextPlayer; //the next player who can take a turn
         address winner;
         bool ended;
         uint pot; // What this game is worth: ether paid into the game
@@ -137,14 +137,27 @@ contract TurnBasedGame {
                 }
             }
         }
+
+
     }
+    function takeTurn(bytes32 gameId) {
+        require(games[gameId].player1 == msg.sender || games[gameId].player2 == msg.sender, "this isn't your game!");
+        require(games[gameId].nextPlayer == msg.sender, "its not your turn!");
+
+        if (msg.sender == games[gameId].player1) {
+            games[gameId].nextPlayer = games[gameId].player2;
+        } else {
+            games[gameId].nextPlayer = games[gameId].player1;
+        }
+
+        }
 }
 
 contract Battleships is TurnBasedGame {
 
     event GameInitialized(bytes32 indexed gameId, address indexed player1, string player1Alias, uint pot);
     event GameJoined(bytes32 indexed gameId, address indexed player1, string player1Alias, address indexed player2, string player2Alias, uint pot);
-
+    event TurnTaken(address turnTaker);
 
         /**
      * Initialize a new game
@@ -168,9 +181,16 @@ contract Battleships is TurnBasedGame {
     function joinGame(bytes32 gameId, string player2Alias) public payable {
         super.joinGame(gameId, player2Alias);
 
-        // If the other player isn't white, player2 will play as white
+        // for this game the first to play is the entering challenger (player2)
+        games[gameId].nextPlayer = msg.sender;
 
 
         emit GameJoined(gameId, games[gameId].player1, games[gameId].player1Alias, games[gameId].player2, player2Alias, games[gameId].pot);
 }
+
+    function takeTurn(bytes32 gameId) public {
+      //  address turnTaker = msg.sender;
+        super.takeTurn(gameId);
+        emit TurnTaken(msg.sender);
+    }
 }
