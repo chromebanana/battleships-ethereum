@@ -1,15 +1,6 @@
 pragma solidity ^0.4.18;
 
 contract TurnBasedGame {
-  uint storedData;
-
-  function set(uint x) public {
-    storedData = x;
-  }
-
-  function get() public view returns (uint) {
-    return storedData;
-  }
 
     event GameEnded(bytes32 indexed gameId);
     event GameClosed(bytes32 indexed gameId, address indexed player);
@@ -17,7 +8,7 @@ contract TurnBasedGame {
     // GameDrawOfferRejected: notification that a draw of the currently turning player
     //                        is rejected by the waiting player
     event GameDrawOfferRejected(bytes32 indexed gameId);
-    event DebugInts(string message, uint value1, uint value2, uint value3);
+
 
     struct Game {
         address player1;
@@ -26,10 +17,15 @@ contract TurnBasedGame {
         string player2Alias;
         address nextPlayer; //the next player who can take a turn
         address winner;
+        bool started;
         bool ended;
         uint pot; // What this game is worth: ether paid into the game
         uint player1Winnings;
         uint player2Winnings;
+        uint player1Hand;
+      //  bool player1Ready;
+        uint player2Hand;
+       // bool player2Ready;
     }
 
     mapping (bytes32 => Game) public games;
@@ -99,6 +95,27 @@ contract TurnBasedGame {
         return gameId;
     }
 
+
+    function setPlayerHand(bytes32 gameId, uint value) {
+        if (msg.sender == games[gameId].player1)
+            //require(games[gameId].player1Ready == false, "you've already set your hand");
+            games[gameId].player1Hand = value;
+           // games[gameId].player1Ready = true;
+        if (msg.sender == games[gameId].player2)
+            //require(games[gameId].player1Ready == false, "you've already set your hand");
+            games[gameId].player2Hand = value;
+           // games[gameId].player2Ready = true;
+    }
+
+    function getPlayerHand(bytes32 gameId, address player) returns (uint) {
+        if (player == games[gameId].player1) {
+            return games[gameId].player1Hand;
+        }
+        if (player == games[gameId].player1) {
+            return games[gameId].player2Hand;
+        }
+    }
+
     /**
      * Join an initialized game
      * bytes32 gameId: ID of the game to join
@@ -164,23 +181,26 @@ contract Battleships is TurnBasedGame {
      * string player1Alias: Alias of the player creating the game
      * bool playAsWhite: Pass true or false depending on if the creator will play as white
      */
-    function initGame(string player1Alias) public payable returns (bytes32) {
+    function initGame(string player1Alias, uint playerHand) public payable returns (bytes32) {
         bytes32 gameId = super.initGame(player1Alias);
 
-
+        super.setPlayerHand(gameId, playerHand);
         // Sent notification events
         emit GameInitialized(gameId, games[gameId].player1, player1Alias, games[gameId].pot);
         return gameId;
     }
+
+
+
 
     /**
      * Join an initialized game
      * bytes32 gameId: ID of the game to join
      * string player2Alias: Alias of the player that is joining
      */
-    function joinGame(bytes32 gameId, string player2Alias) public payable {
+    function joinGame(bytes32 gameId, string player2Alias, uint playerHand) public payable {
         super.joinGame(gameId, player2Alias);
-
+        setPlayerHand(gameId, playerHand);
         // for this game the first to play is the entering challenger (player2)
         games[gameId].nextPlayer = msg.sender;
 
