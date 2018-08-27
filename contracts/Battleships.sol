@@ -178,6 +178,12 @@ contract Battleships is TurnBasedGame {
     event GameJoined(bytes32 indexed gameId, address indexed player1, string player1Alias, address indexed player2, string player2Alias, uint pot);
     event TurnTaken(address nextPlayer);
 
+
+    struct playerData {
+      uint guess;
+    }
+    mapping (bytes32 => playerData) public Data;
+
         /**
      * Initialize a new game
      * string player1Alias: Alias of the player creating the game
@@ -220,4 +226,5 @@ contract Battleships is TurnBasedGame {
         }
         emit TurnTaken(games[gameId].nextPlayer);
     }
+
 }
