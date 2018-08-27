@@ -28,6 +28,8 @@ class App extends Component {
       opponentAlias: "",
       opponentAddress: null,
       gameJoined: null,
+      myHandAsPlayer1: "",
+      myHandAsPlayer2: "",
       pot: null
     }
 
@@ -94,8 +96,9 @@ class App extends Component {
     })
 
     var player1Alias = this.state.player1Alias
+    var myHand = this.state.myHandAsPlayer1
 
-    contract.initGame(player1Alias, {from: account})
+    contract.initGame(player1Alias, myHand, {from: account})
     .then(result => {
       return contract.getOpenGameIds.call()
     })
@@ -127,6 +130,7 @@ event.preventDefault()
 
   var player2Alias = this.state.player2Alias
   var gameID = this.state.gameIDToJoin
+  var myHand = this.state.myHandAsPlayer2
 
   var gameJoinedEvent = contract.GameJoined();
 
@@ -144,7 +148,7 @@ event.preventDefault()
 
   console.log (player2Alias, 'you want to join::::', gameID);
 
-  contract.joinGame(gameID, player2Alias, {from: account})
+  contract.joinGame(gameID, player2Alias, myHand, {from: account})
 
 }
 
@@ -174,6 +178,12 @@ event.preventDefault()
     placeholder="William Wallace"
     value={ this.state.player1Alias }
     onChange={ event => this.setState ({ player1Alias: event.target.value }) } />
+    <input
+     type="number"
+     name="choose-p2-hand"
+     min="1" max="5"
+     //value={ this.state.myHandAsPlayer1 }
+     onChange={ event => this.setState ({ myHand: event.target.value }) } />
     <button type="submit">Create Game</button>
     </form>
 
@@ -186,7 +196,7 @@ event.preventDefault()
               <form onSubmit={ this.joinGame.bind(this)}>
               <input
                 type="text"
-                name="choose-game-id"
+                name="choose-p2-Alias"
                 placeholder="Enter a screen name"
                 value={ this.state.player2Alias}
                 onChange={ event => this.setState ({ player2Alias: event.target.value }) } />
@@ -196,7 +206,12 @@ event.preventDefault()
                   placeholder="Enter an open game Id"
                   value={ this.state.gameIDToJoin }
                   onChange={ event => this.setState ({ gameIDToJoin: event.target.value }) } />
-                  <button type="submit"> Join </button>
+               <input
+                type="number"
+                name="choose-p2-hand"
+                min="1" max="5"
+                //value={ this.state.myHandAsPlayer2 }
+                onChange={ event => this.setState ({ myHand: event.target.value }) } />                  <button type="submit"> Join </button>
                   </form>
 <p> you are now playing against {this.state.opponentAlias} from {this.state.opponentAddress}</p>
                     </div>
