@@ -30,7 +30,10 @@ class App extends Component {
       gameJoined: null,
       myHandAsPlayer1: "",
       myHandAsPlayer2: "",
-      pot: null
+      pot: null,
+      currentGameId: null,
+      myGuess: null,
+      nextPlayer: null
     }
 
   }
@@ -89,8 +92,7 @@ class App extends Component {
 
     gameInitializedEvent.watch ((err, event) => {
       if (err) console.error ('An error occured::::', err);
-      console.log ('This is the event::::', event);
-      console.log ('THis is the data::::', event.args);
+      console.log ('Game created::::', event.args);
       this.setState({gameInitializedByPlayerAddress : event.args.player1})
       this.setState({gameInitializedByPlayerAlias : event.args.player1Alias})
     })
@@ -136,11 +138,11 @@ event.preventDefault()
 
   gameJoinedEvent.watch ((err, event) => {
     if (err) console.error ('An error occured::::', err);
-    console.log ('This is the event::::', event);
-    console.log ('THis is the data::::', event.args);
+    console.log ('GAME JOINED::::', event.args);
     this.setState({opponentAlias : event.args.player1Alias})
     this.setState({opponentAddress : event.args.player1})
     this.setState({pot : event.args.pot})
+    this.setState({currentGameId : event.args.gameId})
     this.setState({gameJoined : true})
 
   })
@@ -152,6 +154,24 @@ event.preventDefault()
 
 }
 
+takeTurn(event){
+  event.preventDefault()
+  const contract = this.state.contractInstance
+  const account = this.state.account
+
+  var gameId = this.state.currentGameId
+  var myGuess = this.state.myGuess
+  var turnTakenEvent = contract.TurnTaken();
+
+  turnTakenEvent.watch ((err, event) => {
+    if (err) console.error ('An error occured::::', err);
+    console.log ('TURN TAKEN::::', event.args)
+    this.setState({lastToPlay : event.args.turnTaker})
+})
+
+console.log ('taking your turn::::');
+contract.takeTurn(gameId, myGuess, {from: account})
+}
 
 
   render() {
@@ -211,9 +231,19 @@ event.preventDefault()
                 name="choose-p2-hand"
                 min="1" max="5"
                 //value={ this.state.myHandAsPlayer2 }
-                onChange={ event => this.setState ({ myHand: event.target.value }) } />                  <button type="submit"> Join </button>
+                onChange={ event => this.setState ({ myHandAsPlayer2: event.target.value }) } />
+                      <button type="submit"> Join </button>
                   </form>
 <p> you are now playing against {this.state.opponentAlias} from {this.state.opponentAddress}</p>
+<button onClick={this.takeTurn.bind(this)}>See All Open Games</button>
+<form onSubmit={ this.takeTurn.bind(this)}>
+ <input
+  type="number"
+  name="take-turn"
+  min="1" max="5"
+  onChange={ event => this.setState ({ myGuess: event.target.value }) } />
+        <button type="submit"> Guess </button>
+    </form>
                     </div>
           </div>
         </main>

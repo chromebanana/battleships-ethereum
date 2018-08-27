@@ -23,8 +23,10 @@ contract TurnBasedGame {
         uint player1Winnings;
         uint player2Winnings;
         uint player1Hand;
+        uint player1Guess;
       //  bool player1Ready;
         uint player2Hand;
+        uint player2Guess;
        // bool player2Ready;
     }
 
@@ -174,7 +176,7 @@ contract Battleships is TurnBasedGame {
 
     event GameInitialized(bytes32 indexed gameId, address indexed player1, string player1Alias, uint pot);
     event GameJoined(bytes32 indexed gameId, address indexed player1, string player1Alias, address indexed player2, string player2Alias, uint pot);
-    event TurnTaken(address turnTaker);
+    event TurnTaken(address nextPlayer);
 
         /**
      * Initialize a new game
@@ -208,9 +210,14 @@ contract Battleships is TurnBasedGame {
         emit GameJoined(gameId, games[gameId].player1, games[gameId].player1Alias, games[gameId].player2, player2Alias, games[gameId].pot);
 }
 
-    function takeTurn(bytes32 gameId) public {
+    function takeTurn(bytes32 gameId, uint guess) public {
       //  address turnTaker = msg.sender;
         super.takeTurn(gameId);
-        emit TurnTaken(msg.sender);
+        if (msg.sender == games[gameId].player1) {
+            games[gameId].player1Guess = guess;
+        } else {
+            games[gameId].player2Guess = guess;
+        }
+        emit TurnTaken(games[gameId].nextPlayer);
     }
 }
