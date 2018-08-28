@@ -1,45 +1,45 @@
 pragma solidity ^0.4.2;
 
-contract TurnBasedGame {
+/// @title A contract for playing a simple turn based guessing game
+/// @author William Cragg
+/// @notice You can use this contract as a basis for any turn based game
+/// @dev It is most definetly insecure at the moment
+contract Battleships {
+    event GameHasEnded(bytes32 indexed gameId, address indexed winner);
+    event WinningsTransferred(bytes32 indexed gameId, address indexed winner);
+    event GameInitialized(bytes32 indexed gameId, address indexed player1, string player1Alias, uint wager);
+    event GameJoined(bytes32 indexed gameId, address indexed player1, string player1Alias, address indexed player2, string player2Alias, uint wager);
+    event TurnTaken(address nextPlayer, bool targetHit);
 
-    event GameEnded(bytes32 indexed gameId);
-    event GameClosed(bytes32 indexed gameId, address indexed player);
-    event GameTimeoutStarted(bytes32 indexed gameId, uint timeoutStarted, int8 timeoutState);
-    // GameDrawOfferRejected: notification that a draw of the currently turning player
-    //                        is rejected by the waiting player
-    event GameDrawOfferRejected(bytes32 indexed gameId);
 
-
-    struct Game {
-        address player1;
-        address player2;
+    struct TwoPlayerGame {
+        address player1; // player 1 always the creater of a game
+        address player2; // player 2 is always the challenger/joinee
         string player1Alias;
         string player2Alias;
         address nextPlayer; //the next player who can take a turn
         address winner;
-        bool started;
         bool ended;
-        uint pot; // What this game is worth: ether paid into the game
+        uint wager; // ether paid in to the game as a bet (can be zero)
         uint player1Winnings;
         uint player2Winnings;
-        uint player1Hand;
-        uint player1Guess;
-      //  bool player1Ready;
-        uint player2Hand;
-        uint player2Guess;
-       // bool player2Ready;
+        uint player1Hand; //to hold state of play for player1
+        uint player2Hand; //to hold state of play for player2
     }
 
-    mapping (bytes32 => Game) public games;
+    mapping (bytes32 => TwoPlayerGame) public games;
 
-    // stack of open game ids
+    // mapping for open game ids
     mapping (bytes32 => bytes32) public openGameIds;
-    bytes32 public head;
+    bytes32 public head; //head is to represent top of the pile
 
-    // stack of games of players
+    // mapping for games of players
     mapping (address => mapping (bytes32 => bytes32)) public gamesOfPlayers;
     mapping (address => bytes32) public gamesOfPlayersHeads;
 
+    /// @notice gets all the games that a player is part of
+    /// @param player The player you want to get the games of
+    /// @return an array of game IDs
     function getGamesOfPlayer(address player) constant public returns (bytes32[]) {
         bytes32 playerHead = gamesOfPlayersHeads[player];
         uint counter = 0;
@@ -55,6 +55,9 @@ contract TurnBasedGame {
         return data;
     }
 
+
+      /// @notice gets all the open games made with this contrct
+      /// @return an array of game IDs
     function getOpenGameIds() constant public returns (bytes32[]) {
         uint counter = 0;
         for (bytes32 ga = head; ga != 0; ga = openGameIds[ga]) {
@@ -69,24 +72,24 @@ contract TurnBasedGame {
         return data;
     }
 
-
-    function initGame(string player1Alias) public payable returns (bytes32) {
+    /// @notice initialize a game with optional wager
+    /// @param player1Alias is player 1's chosen screen name
+    /// @param playerHand is is player1s chosen game setup, eg battleship position
+    /// @return the ID of the initialized game
+    function initGame(string player1Alias, uint playerHand) public payable returns (bytes32) {
 
         // Generate game id based on player's addresses and current block number
         bytes32 gameId = keccak256(abi.encodePacked(msg.sender,block.number));
-
         games[gameId].ended = false;
 
-        // Initialize participants
+        // Initialize player1
         games[gameId].player1 = msg.sender;
         games[gameId].player1Alias = player1Alias;
-        games[gameId].player1Winnings = 0;
-        games[gameId].player2Winnings = 0;
 
         // Initialize game value
-        games[gameId].pot = msg.value * 2;
+        games[gameId].wager = msg.value;
 
-        // Add game to gamesOfPlayers
+        // Add game to list of player1s games
         gamesOfPlayers[msg.sender][gameId] = gamesOfPlayersHeads[msg.sender];
         gamesOfPlayersHeads[msg.sender] = gameId;
 
@@ -94,56 +97,52 @@ contract TurnBasedGame {
         openGameIds[gameId] = head;
         head = gameId;
 
+        // set game state for player1
+        setPlayerHand(gameId, playerHand);
+        // Sent notification events
+        emit GameInitialized(gameId, games[gameId].player1, player1Alias, games[gameId].wager);
         return gameId;
     }
 
 
+
+    /// @notice set the data for the players game
+    /// @dev this could be extended to hold the position of battleships (for example)
+    /// @param gameId is the game being set up
+    /// @param value is state being stored for the player (TODO - position of the battleships)
     function setPlayerHand(bytes32 gameId, uint value) public {
+      require(value > 0, "must be greater than zero");
+      require(value < 6, "must be no greater than five");
         if (msg.sender == games[gameId].player1)
-            //require(games[gameId].player1Ready == false, "you've already set your hand");
             games[gameId].player1Hand = value;
-           // games[gameId].player1Ready = true;
         if (msg.sender == games[gameId].player2)
-            //require(games[gameId].player1Ready == false, "you've already set your hand");
             games[gameId].player2Hand = value;
-           // games[gameId].player2Ready = true;
     }
 
-    function getPlayerHand(bytes32 gameId, address player) public returns (uint) {
-        if (player == games[gameId].player1) {
-            return games[gameId].player1Hand;
-        }
-        if (player == games[gameId].player2) {
-            return games[gameId].player2Hand;
-        }
-    }
 
-    /**
-     * Join an initialized game
-     * bytes32 gameId: ID of the game to join
-     * string player2Alias: Alias of the player that is joining
-     */
-    function joinGame(bytes32 gameId, string player2Alias) public payable {
+    /// @notice join a game with optional wager
+    /// @param gameId is the ID of the game you wish to join
+    /// @param player2Alias is player 2's chosen screen name
+    /// @param playerHand is state being stored for the player (TODO - position of the battleships)
+    function joinGame(bytes32 gameId, string player2Alias, uint playerHand) public payable {
 
         //check that this game was not intitalized by joiner!
         require(games[gameId].player1 != msg.sender, "you can't join your own game!");
-
         // Check that this game does not have a second player yet
         require(games[gameId].player2 == 0, "this game is full");
+        // require second player to match the bet if any made.
+        require(msg.value == games[gameId].wager, "you need to match the bet");
 
-        // require second player to match the bet.
-        require(msg.value == games[gameId].pot, "you need to match the bet");
-
-        games[gameId].pot += msg.value;
-
+        games[gameId].wager += msg.value;
+        // Initialize player2
         games[gameId].player2 = msg.sender;
         games[gameId].player2Alias = player2Alias;
 
-        // Add game to gamesOfPlayers
+        // Add game ID to list of player2's games
         gamesOfPlayers[msg.sender][gameId] = gamesOfPlayersHeads[msg.sender];
         gamesOfPlayersHeads[msg.sender] = gameId;
 
-        // Remove from openGameIds
+        // Remove from openGameIds - so no one else tries to join
         if (head == gameId) {
             head = openGameIds[head];
             openGameIds[gameId] = bytes32(0);
@@ -156,75 +155,66 @@ contract TurnBasedGame {
                 }
             }
         }
-
+        // set game state for player1
+        setPlayerHand(gameId, playerHand);
+        // for this simple game example the first to play is the entering challenger (player2)
+        games[gameId].nextPlayer = msg.sender;
+        // inform client that challenger has entered
+        emit GameJoined(gameId, games[gameId].player1, games[gameId].player1Alias, games[gameId].player2, player2Alias, games[gameId].wager);
 
     }
-    function takeTurn(bytes32 gameId) public {
-        require(games[gameId].player1 == msg.sender || games[gameId].player2 == msg.sender, "this isn't your game!");
-        require(games[gameId].nextPlayer == msg.sender, "its not your turn!");
 
+
+    /// @notice play your turn of the game
+    /// @param gameId is the game being played
+    /// @param guess is the guess being made by the current player
+    function takeTurn(bytes32 gameId, uint guess) public {
+        // can only play a turn if the caller is in the game
+        require(games[gameId].player1 == msg.sender || games[gameId].player2 == msg.sender, "this isn't your game!");
+        // must be callers turn to play
+        require(games[gameId].nextPlayer == msg.sender, "its not your turn!");
+        // game must still be in play
+        require(games[gameId].ended == false, "this game has ended");
+
+        // prepare next player for their turn
         if (msg.sender == games[gameId].player1) {
             games[gameId].nextPlayer = games[gameId].player2;
         } else {
             games[gameId].nextPlayer = games[gameId].player1;
         }
 
-        }
-}
-
-contract Battleships is TurnBasedGame {
-
-    event GameInitialized(bytes32 indexed gameId, address indexed player1, string player1Alias, uint pot);
-    event GameJoined(bytes32 indexed gameId, address indexed player1, string player1Alias, address indexed player2, string player2Alias, uint pot);
-    event TurnTaken(address nextPlayer);
-
-
-    struct playerData {
-      uint guess;
-    }
-    mapping (bytes32 => playerData) public Data;
-
-        /**
-     * Initialize a new game
-     * string player1Alias: Alias of the player creating the game
-     * bool playAsWhite: Pass true or false depending on if the creator will play as white
-     */
-    function initGame(string player1Alias, uint playerHand) public payable returns (bytes32) {
-        bytes32 gameId = super.initGame(player1Alias);
-
-        super.setPlayerHand(gameId, playerHand);
-        // Sent notification events
-        emit GameInitialized(gameId, games[gameId].player1, player1Alias, games[gameId].pot);
-        return gameId;
-    }
-
-
-
-
-    /**
-     * Join an initialized game
-     * bytes32 gameId: ID of the game to join
-     * string player2Alias: Alias of the player that is joining
-     */
-    function joinGame(bytes32 gameId, string player2Alias, uint playerHand) public payable {
-        super.joinGame(gameId, player2Alias);
-        super.setPlayerHand(gameId, playerHand);
-        // for this game the first to play is the entering challenger (player2)
-        games[gameId].nextPlayer = msg.sender;
-
-
-        emit GameJoined(gameId, games[gameId].player1, games[gameId].player1Alias, games[gameId].player2, player2Alias, games[gameId].pot);
-}
-
-    function takeTurn(bytes32 gameId, uint guess) public {
-      //  address turnTaker = msg.sender;
-        super.takeTurn(gameId);
+        uint secret;
+        bool targetHit = false;
+        /// geet the value of the oppenents hand (position of their battleships for comparison)
         if (msg.sender == games[gameId].player1) {
-            games[gameId].player1Guess = guess;
+            secret = games[gameId].player2Hand;
         } else {
-            games[gameId].player2Guess = guess;
+            secret = games[gameId].player1Hand;
         }
-        emit TurnTaken(games[gameId].nextPlayer);
-    }
+        /// check if on target
+        if (guess == secret) {
+          games[gameId].winner = msg.sender;// if yes we have a winner!
+          endGame(gameId); // and this game should end
+          targetHit = true;
+        }
+        // notify client that the turn is over, whos turn is next and whether the target was hit
+        emit TurnTaken(games[gameId].nextPlayer, targetHit);
+        }
 
+
+    /// @notice play your turn of the game
+    /// @param gameId is the game being ended
+    function endGame(bytes32 gameId) public {
+        // game can only end if someone has won
+        require(games[gameId].winner == msg.sender, "this game aint over til somebody wins!");
+        games[gameId].ended = true;
+        // tell client which game has ended and  who won it
+        emit GameHasEnded(gameId, games[gameId].winner);
+
+        //if there was a wager tramsfer it to the winner
+        if(msg.sender.send(games[gameId].wager)) {
+          games[gameId].wager = 0; //reset
+          emit WinningsTransferred(gameId, games[gameId].winner);
+        }
+    }
 }
