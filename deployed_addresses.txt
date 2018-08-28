@@ -1,0 +1,5 @@
+### Rinkeby Testnet Installed Address
+
+0xa574b1ecd29d7ec65d1cfb7f2b2bbb0aa0192171
+
+Test addresses have less data in them than the local versions, deployed via Remix.

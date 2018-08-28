@@ -30,7 +30,7 @@ class App extends Component {
       gameJoined: null,
       myHandAsPlayer1: "",
       myHandAsPlayer2: "",
-      pot: null,
+      wager: null,
       currentGameId: null,
       myGuess: null,
       nextPlayer: null
@@ -141,7 +141,7 @@ event.preventDefault()
     console.log ('GAME JOINED::::', event.args);
     this.setState({opponentAlias : event.args.player1Alias})
     this.setState({opponentAddress : event.args.player1})
-    this.setState({pot : event.args.pot})
+    this.setState({wager : event.args.wager})
     this.setState({currentGameId : event.args.gameId})
     this.setState({gameJoined : true})
 
