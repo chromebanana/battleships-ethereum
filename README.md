@@ -15,13 +15,19 @@ It was designed with expandibility in mind. So as well as a Battleships game thi
 ## Prerequisites
 To run the project you will need to have the following installed on your machine
   node package manager!
+  
     Truffle   https://github.com/trufflesuite/truffle
+    
     ganache-cli   https://github.com/trufflesuite/ganache-cli
+    
    MetaMask  https://metamask.io/
 
 once ganache-cli is running, copy the neumonic into metamask and in the terminal enter:
+
  truffle compile
+ 
  truffle migrate --reset
+ 
  npm run start
 
 ## Credits
