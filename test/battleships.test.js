@@ -78,31 +78,46 @@ contract('Battleships', function(accounts) {
 
 
 
-  it("a correct guess wins the game", async() => {
+  // it("a correct guess wins the game", async() => {
+  //   const game = await Battleships.deployed();
+  //   var gameId = null;
+  //   var winner = null;
+  //   var gameInitializedEvent = game.GameInitialized();
+  //   var gameHasEndedEvent = game.GameHasEnded();
+  //
+  //   gameInitializedEvent.watch ((err, event) => {
+  //     if (err) console.error ('An error occured::::', err);
+  //     gameId = event.args.gameId;
+  //   })
+  //
+  //   gameHasEndedEvent.watch  ((err, event ) => {
+  //     if (err) console.error ('An error occured::::', err);
+  //     winner = event.args.winner;
+  //   })
+  //
+  //
+  //   await game.initGame("Alice", 1, {from: alice});
+  //   await game.joinGame(gameId, "Bob", 1, {from: bob});
+  //
+  //   await game.takeTurn(gameId, 1, {from: bob});
+  //
+  //   assert.equal(winner, bob, 'Inititalized game should be in list player1s games');
+  // });
+  //
+  it("p1 can set alias", async() => {
     const game = await Battleships.deployed();
-    var gameId = null
-    var winner = null
+    var alias = "Alice"
+
     var gameInitializedEvent = game.GameInitialized();
-    var gameHasEndedEvent = game.GameHasEnded();
 
     gameInitializedEvent.watch ((err, event) => {
       if (err) console.error ('An error occured::::', err);
-    //  console.log ('THis is the data::::', event.args);
-      gameId = event.args.gameId;
+      gameId = event.args.player1Alias;
     })
 
-    gameHasEndedEvent.watch  ((err, event ) => {
-      if (err) console.error ('An error occured::::', err);
-      winner = event.args.winner;
-    })
+    await game.initGame(alias, 1, {from: alice});
+    assert.equal(alias, "Alice", 'player 1 alias should be "Alice"');
 
 
-    await game.initGame("Alice", 1, {from: alice});
-    await game.joinGame(gameId, "Bob", 1, {from: bob});
-
-    await game.takeTurn(gameId, 1, {from: bob});
-
-    assert.equal(winner, bob, 'Inititalized game should be in list player1s games');
-  });
-
+});
 });
