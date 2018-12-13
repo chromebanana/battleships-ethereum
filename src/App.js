@@ -203,7 +203,7 @@ contract.takeTurn(gameId, myGuess, {from: account})
      name="choose-p2-hand"
      min="1" max="5"
      //value={ this.state.myHandAsPlayer1 }
-     onChange={ event => this.setState ({ myHand: event.target.value }) } />
+     onChange={ event => this.setState ({ myHandAsPlayer1: event.target.value }) } />
     <button type="submit">Create Game</button>
     </form>
 
