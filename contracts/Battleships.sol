@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.24;
 
 /// @title A contract for playing a simple turn based guessing game
 /// @author William Cragg
